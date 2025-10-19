@@ -28,4 +28,4 @@ sketchybar --add bracket spacesBracket '/space\..*/' \
   --set spacesBracket background.color=$BACKGROUND_1 background.corner_radius=5 background.drawing=on background.height=20
 
 sketchybar --add item spacesSpacer left \
-  --set spacesSpacer padding_right=20 icon=""
+  --set spacesSpacer padding_right=10 icon=""
