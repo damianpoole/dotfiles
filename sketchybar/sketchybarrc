@@ -10,9 +10,8 @@ PLUGIN_DIR="$HOME/.config/sketchybar/plugins" # Directory where all the plugin s
 # If you are looking for other colors, see the color picker:
 # https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
 
-source "$ITEM_DIR/spaces.sh"
 source "$HOME/.config/sketchybar/colors.sh" # Loads all defined colors
-
+source "$ITEM_DIR/spaces.sh"
 ##### Changing Defaults #####
 # We now change some default values, which are applied to all further items.
 # For a full list of all available item properties see:
@@ -22,7 +21,7 @@ source "$HOME/.config/sketchybar/colors.sh" # Loads all defined colors
 bar=(
   height=32
   color=$BAR_COLOR
-  shadow=on
+  shadow=off
   position=top
   sticky=on
   padding_right=5
@@ -70,10 +69,10 @@ sketchybar --add item app-icon left \
                 label.drawing=no \
            --add item front_app left \
            --set front_app icon.drawing=off padding_left=0 script="$PLUGIN_DIR/front_app.sh" \
-           --subscribe front_app front_app_switched
 sketchybar --add bracket frontAppBracket \
             app-icon \
             front_app \
+            --set frontAppBracket background.padding_left=30 \
             --subscribe front_app front_app_switched \
 ##### Adding Right Items #####
 # In the same way as the left items we can add items to the right side.
