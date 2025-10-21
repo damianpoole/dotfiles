@@ -58,17 +58,9 @@ sketchybar --default "${default[@]}"
 sketchybar --add item app-icon left \
            --set app-icon icon.drawing=off background.color=$ICON_BACKGROUND script="$PLUGIN_DIR/app-icon.sh" \
            --subscribe app-icon front_app_switched \
-           --add item frontApp.separator left \
-           --set frontApp.separator \
-                background.padding_left=-3 \
-                icon= \
-                icon.font="FiraCode Nerd Font:Bold:16.0" \
-                icon.color=$ICON_BACKGROUND \
-                icon.padding_left=0 \
-                icon.padding_right=0 \
-                label.drawing=no \
            --add item front_app left \
            --set front_app icon.drawing=off padding_left=0 script="$PLUGIN_DIR/front_app.sh" \
+
 sketchybar --add bracket frontAppBracket \
             app-icon \
             front_app \
