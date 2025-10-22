@@ -1,5 +1,10 @@
 #!/bin/sh
 echo "$INFO"
 if [ "$SENDER" = "front_app_switched" ]; then
-  sketchybar --set "$NAME" label="$INFO"
+  bar=(
+    label=$INFO
+    padding_left=6
+    padding_right=5
+  )
+  sketchybar --set "$NAME" "${bar[@]}"
 fi

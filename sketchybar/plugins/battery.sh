@@ -1,43 +1,64 @@
 #!/bin/sh
 
 source "$HOME/.config/sketchybar/colors.sh" # Loads all defined colors
+
 PERCENTAGE="$(pmset -g batt | grep -Eo "\d+%" | cut -d% -f1)"
 CHARGING="$(pmset -g batt | grep 'AC Power')"
-
-echo "Battery percentage: $PERCENTAGE"
 
 if [ "$PERCENTAGE" = "" ]; then
   exit 0
 fi
 
+default=(
+  icon.background.height=20
+  icon.background.corner_radius=5
+  label.padding_left=6
+  label.color=$WHITE
+  icon.color=$BLACK
+  icon.padding_left=7
+  icon.padding_right=7
+)
+
 case "${PERCENTAGE}" in
 9[0-9] | 100)
-  BACKGROUND=$GREEN
-  ICON=""
+  bar_update=(
+    icon.background.color=$GREEN
+    icon=""
+  ) 
   ;;
 [6-8][0-9])
-  BACKGROUND=$YELLOW
-  ICON=""
+  bar_update=(
+    icon.background.color=$YELLOW
+    icon=""
+  )
   ;;
 [3-5][0-9])
-  BACKGROUND=$ORANGE
-  ICON=""
+  bar_update=(
+    icon.background.color=$ORANGE
+    icon=""
+  )
   ;;
 [1-2][0-9])
-  BACKGROUND=$RED
-  ICON=""
+  bar_update=(
+    icon.background.color=$RED
+    icon=""
+  )
   ;;
 *)
-  BACKGROUND=$RED
-  ICON=""
+  bar_update=(
+    icon.background.color=$RED
+    icon=""
+  )
   ;;
 esac
 
 if [[ "$CHARGING" != "" ]]; then
-  BACKGROUND=$BLUE
-  ICON=""
+  bar_update=(
+    icon.background.color=$BLUE
+    icon=""
+  )
 fi
-echo "$BACKGROUND"
+
 # The item invoking this script (name $NAME) will get its icon and label
 # updated with the current battery status
-sketchybar --set "$NAME" icon="$ICON" label="${PERCENTAGE}%" background.color=$BACKGROUND
+sketchybar --set "$NAME" label="${PERCENTAGE}%" "${default[@]}" "${bar_update[@]}"
