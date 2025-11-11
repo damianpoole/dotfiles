@@ -5,4 +5,11 @@ return {
       colorscheme = "catppuccin",
     },
   },
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    opts = {
+      flavour = "frappe", -- latte, frappe, macchiato, mocha
+    },
+  },
 }

@@ -74,6 +74,8 @@ plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
+eval $(/opt/homebrew/bin/brew shellenv)
+
 # User configuration
 
 eval "$(zoxide init zsh)"
