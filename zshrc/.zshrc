@@ -79,6 +79,13 @@ eval $(/opt/homebrew/bin/brew shellenv)
 # User configuration
 
 eval "$(zoxide init zsh)"
+export PATH="$HOME/.local/bin:$PATH"
+
+alias l="eza -l --icons --git -a"
+alias lt="eza --tree --level=2 --long --icons --git"
+alias ltree="eza --tree --level=2  --icons --git"
+
+alias cl="clear"
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
