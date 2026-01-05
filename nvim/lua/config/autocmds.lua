@@ -10,3 +10,10 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "help",
   command = "wincmd L",
 })
+
+vim.filetype.add({
+  extension = {
+    mts = "typescript",
+    mtsx = "typescriptreact",
+  },
+})
