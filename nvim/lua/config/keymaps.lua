@@ -16,6 +16,11 @@ end, { desc = "Find files (frecency)" })
 
 vim.keymap.set("n", "<leader>fp", "<cmd>FzfLua files cwd=%:p:h<cr>", { desc = "Find Files (Buffer Dir)" })
 
+-- Toggle Spellcheck
+vim.keymap.set("n", "<leader>us", function()
+  vim.opt.spell = not (vim.opt.spell:get())
+end, { desc = "Toggle Spellcheck" })
+
 -- vim.keymap.set('n', '<c-k>', ':wincmd k<CR>')
 -- vim.keymap.set('n', '<c-j>', ':wincmd j<CR>')
 -- vim.keymap.set('n', '<c-h>', ':wincmd h<CR>')
