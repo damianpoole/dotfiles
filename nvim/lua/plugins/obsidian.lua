@@ -148,6 +148,10 @@ return {
         path = "~/vaults/second-brain",
       },
     },
+    -- FORCE new notes to go to the root (or specific 'notes_subdir' if configured)
+    -- This stops them from being created in the 'Weekly' folder when you are inside a weekly note.
+    new_notes_location = "notes_subdir",
+
     -- Setting picker to nil or a custom function
     picker = {
       name = "fzf-lua",
