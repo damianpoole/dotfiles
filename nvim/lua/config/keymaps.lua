@@ -25,3 +25,10 @@ end, { desc = "Toggle Spellcheck" })
 -- vim.keymap.set('n', '<c-j>', ':wincmd j<CR>')
 -- vim.keymap.set('n', '<c-h>', ':wincmd h<CR>')
 -- vim.keymap.set('n', '<c-l>', ':wincmd l<CR>')
+
+-- Console Log Variable
+vim.keymap.set("n", "<leader>cv", function()
+  local word = vim.fn.expand("<cword>")
+  local line = "console.log('" .. word .. ":', " .. word .. ");"
+  vim.api.nvim_put({ line }, "l", true, true)
+end, { desc = "Console Log Variable" })

@@ -17,3 +17,11 @@ vim.filetype.add({
     mtsx = "typescriptreact",
   },
 })
+
+-- Turn off spell checker for markdown files in second-brain
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "*/vaults/second-brain/*.md",
+  callback = function()
+    vim.opt_local.spell = false
+  end,
+})

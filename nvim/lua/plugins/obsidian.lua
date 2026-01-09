@@ -14,10 +14,26 @@ return {
     {
       "<leader>op",
       function()
+        local excludes = {
+          ".obsidian",
+          ".git",
+          ".gitignore",
+          ".trash",
+          ".stfolder",
+          ".stignore",
+          ".markdownlint.json",
+        }
+
+        -- Build the fd_opts string dynamically
+        local exclude_string = ""
+        for _, item in ipairs(excludes) do
+          exclude_string = exclude_string .. "--exclude " .. item .. " "
+        end
+
         require("fzf-lua").files({
           cwd = "~/vaults/second-brain",
           -- fd_opts is the standard way to pass flags to the fd command
-          fd_opts = "--type f --exclude .obsidian --exclude .git --exclude .gitignore --strip-cwd-prefix",
+          fd_opts = "--type f --strip-cwd-prefix " .. exclude_string,
         })
       end,
       desc = "Search Notes (respecting gitignore)",
