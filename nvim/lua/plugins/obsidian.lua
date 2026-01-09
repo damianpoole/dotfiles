@@ -5,7 +5,7 @@ return {
   ft = "markdown",
   dependencies = {
     "nvim-lua/plenary.nvim",
-    "hrsh7th/nvim-cmp",
+    "saghen/blink.compat", -- Required to mock nvim-cmp
     "ibhagwan/fzf-lua", -- Ensure fzf-lua is a dependency
   },
   keys = {
@@ -177,8 +177,11 @@ return {
       date_format = "%Y-%m-%d",
     },
     completion = {
-      nvim_cmp = false,
+      nvim_cmp = true,
       min_chars = 2,
+      -- Even if nvim_cmp is false, this affects how the plugin
+      -- internal logic handles the note identity.
+      prepend_note_id = true,
     },
     ui = {
       enable = false,
@@ -190,6 +193,21 @@ return {
         return prefix .. "-" .. title:gsub(" ", "-"):lower()
       end
       return prefix
+    end,
+    -- This ensures that when you follow/create links,
+    -- they use the Wiki style Obsidian expects.
+    preferred_link_style = "wiki",
+
+    wiki_link_func = function(opts)
+      -- If we have an ID (the filename), always use it as the target.
+      -- If we have a title/label, use it as the display text.
+      if opts.id and opts.label then
+        return string.format("[[%s|%s]]", opts.id, opts.label)
+      elseif opts.id then
+        return string.format("[[%s]]", opts.id)
+      else
+        return string.format("[[%s]]", opts.label)
+      end
     end,
   },
 }
