@@ -87,6 +87,32 @@ alias ltree="eza --tree --level=2  --icons --git"
 
 alias cl="clear"
 
+# Source secrets if they exist
+if [ -f "$HOME/.config/.zshrc_secrets" ]; then
+    source "$HOME/.config/.zshrc_secrets"
+elif [ -f "${0:a:h}/.zshrc_secrets" ]; then
+    source "${0:a:h}/.zshrc_secrets"
+fi
+
+wt-clone() {
+  local url=$1
+  local name=$2
+  
+  # 1. Create directory and clone bare
+  mkdir -p "$name" && cd "$name"
+  git clone --bare "$url" .bare
+  
+  # 2. Setup the .git file pointer
+  echo "gitdir: ./.bare" > .git
+  
+  # 3. Fix the fetch refspec so worktrees see remote branches
+  git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+  
+  # 4. Fetch and add the main branch as the first worktree
+  git fetch origin
+  git worktree add main
+}
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
