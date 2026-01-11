@@ -32,3 +32,6 @@ vim.keymap.set("n", "<leader>cv", function()
   local line = "console.log('" .. word .. ":', " .. word .. ");"
   vim.api.nvim_put({ line }, "l", true, true)
 end, { desc = "Console Log Variable" })
+
+-- Vault Statistics (from obsidian-stats.nvim)
+vim.keymap.set("n", "<leader>oS", "<cmd>ObsidianStats<cr>", { desc = "Vault Statistics" })
