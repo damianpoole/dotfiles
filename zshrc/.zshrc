@@ -113,6 +113,60 @@ wt-clone() {
   git worktree add main
 }
 
+ai-sync() {
+  local target_wt=$1
+  local cli_type=$2
+  local source_dir=".ai"
+
+  # Validation
+  if [[ -z "$target_wt" || -z "$cli_type" ]]; then
+    echo "Usage: ai-sync <worktreeName> <gemini|copilot>"
+    return 1
+  fi
+
+  if [[ ! -d "$source_dir" ]]; then
+    echo "Error: .ai directory not found in current folder."
+    return 1
+  fi
+
+  if [[ ! -d "$target_wt" ]]; then
+    echo "Error: Worktree directory '$target_wt' does not exist."
+    return 1
+  fi
+
+  case "$cli_type" in
+    "copilot")
+      echo "Syncing for Copilot..."
+      local dest="$target_wt/.github"
+      mkdir -p "$dest"
+      # Copy all contents of .ai into .github, overwriting existing
+      cp -rf "$source_dir"/* "$dest/"
+      echo "✅ Synced .ai contents to $dest"
+      ;;
+
+    "gemini")
+      echo "Syncing for Gemini..."
+      local dest="$target_wt/.gemini"
+      mkdir -p "$dest"
+      
+      # 1. Copy everything to .gemini folder
+      cp -rf "$source_dir"/* "$dest/"
+      
+      # 2. Rename AGENTS.md to GEMINI.md inside the .gemini folder if it exists
+      if [[ -f "$dest/AGENTS.md" ]]; then
+        mv -f "$dest/AGENTS.md" "$dest/GEMINI.md"
+        echo "✅ Renamed AGENTS.md to GEMINI.md"
+      fi
+      echo "✅ Synced .ai contents to $dest"
+      ;;
+
+    *)
+      echo "Error: cli-type must be 'gemini-cli' or 'copilot-cli'"
+      return 1
+      ;;
+  esac
+}
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
