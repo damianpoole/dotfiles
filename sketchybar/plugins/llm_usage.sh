@@ -14,14 +14,14 @@ TOGGLE=0
 FORCE_REFRESH=0
 
 for arg in "$@"; do
-  case "$arg" in
+    case "$arg" in
     --toggle) TOGGLE=1 ;;
     --refresh) FORCE_REFRESH=1 ;;
-  esac
+    esac
 done
 
 if [ "$TOGGLE" -eq 1 ]; then
-  sketchybar --set "$PARENT_ITEM" popup.drawing=toggle
+    sketchybar --set "$PARENT_ITEM" popup.drawing=toggle
 fi
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -30,34 +30,34 @@ CACHE_DIR="$HOME/.cache/codexbar"
 CACHE_FILE="$CACHE_DIR/sketchybar-usage.json"
 
 if ! command -v "$CODEXBAR_BIN" >/dev/null 2>&1; then
-  sketchybar --set "$COPILOT_ITEM" label="--"
-  sketchybar --set "$GEMINI_ITEM" label="--"
-  sketchybar --set "$CURSOR_ITEM" label="--"
-  exit 0
+    sketchybar --set "$COPILOT_ITEM" label="--"
+    sketchybar --set "$GEMINI_ITEM" label="--"
+    sketchybar --set "$CURSOR_ITEM" label="--"
+    exit 0
 fi
 
 refresh=0
 if [ "$FORCE_REFRESH" -eq 1 ]; then
-  refresh=1
-elif [ ! -f "$CACHE_FILE" ]; then
-  refresh=1
-else
-  now=$(date +%s)
-  mtime=$(stat -f %m "$CACHE_FILE" 2>/dev/null || echo 0)
-  age=$((now - mtime))
-  if [ "$age" -ge "$CACHE_TTL" ]; then
     refresh=1
-  fi
+elif [ ! -f "$CACHE_FILE" ]; then
+    refresh=1
+else
+    now=$(date +%s)
+    mtime=$(stat -f %m "$CACHE_FILE" 2>/dev/null || echo 0)
+    age=$((now - mtime))
+    if [ "$age" -ge "$CACHE_TTL" ]; then
+        refresh=1
+    fi
 fi
 
 if [ "$refresh" -eq 1 ]; then
-  mkdir -p "$CACHE_DIR"
-  COPILOT_JSON="$($CODEXBAR_BIN --provider copilot --format json --json-only 2>/dev/null || true)"
-  GEMINI_JSON="$($CODEXBAR_BIN --provider gemini --format json --json-only 2>/dev/null || true)"
-  CURSOR_JSON="$($CODEXBAR_BIN --provider cursor --format json --json-only 2>/dev/null || true)"
-  CACHE_FILE="$CACHE_FILE" \
-  COPILOT_JSON="$COPILOT_JSON" GEMINI_JSON="$GEMINI_JSON" CURSOR_JSON="$CURSOR_JSON" \
-  python3 - <<'PY'
+    mkdir -p "$CACHE_DIR"
+    COPILOT_JSON="$($CODEXBAR_BIN --provider copilot --format json --json-only 2>/dev/null || true)"
+    GEMINI_JSON="$($CODEXBAR_BIN --provider gemini --format json --json-only 2>/dev/null || true)"
+    CURSOR_JSON="$($CODEXBAR_BIN --provider cursor --format json --json-only 2>/dev/null || true)"
+    CACHE_FILE="$CACHE_FILE" \
+        COPILOT_JSON="$COPILOT_JSON" GEMINI_JSON="$GEMINI_JSON" CURSOR_JSON="$CURSOR_JSON" \
+        python3 - <<'PY'
 import json
 import os
 import time
@@ -92,7 +92,7 @@ PY
 fi
 
 CACHE_FILE="$CACHE_FILE" \
-python3 - <<'PY' | while IFS=$'\t' read -r name percent; do
+    python3 - <<'PY' | while IFS=$'\t' read -r name percent; do
 import json
 import os
 
@@ -122,16 +122,17 @@ for name in ("copilot", "gemini", "cursor"):
     percent = "" if used is None else str(int(round(float(used))))
     print(f"{name}\t{percent}")
 PY
-  case "$name" in
+
+    case "$name" in
     copilot) item="$COPILOT_ITEM" ;;
     gemini) item="$GEMINI_ITEM" ;;
     cursor) item="$CURSOR_ITEM" ;;
     *) continue ;;
-  esac
+    esac
 
-  if [ -z "$percent" ]; then
-    sketchybar --set "$item" label="--"
-  else
-    sketchybar --set "$item" label="${percent}%"
-  fi
+    if [ -z "$percent" ]; then
+        sketchybar --set "$item" label="--"
+    else
+        sketchybar --set "$item" label="${percent}%"
+    fi
 done
