@@ -7,6 +7,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="robbyrussell"
 
+eval "$(zoxide init zsh)"
 
 # Which plugins would you like to load?
 # Standard plugins can be found in $ZSH/plugins/
