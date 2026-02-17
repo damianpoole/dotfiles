@@ -22,6 +22,7 @@ eval $(/opt/homebrew/bin/brew shellenv)
 
 # User configuration
 export PATH="$HOME/.local/bin:$PATH"
+export EDITOR="nvim"
 
 alias l="eza -l --icons --git -a"
 alias lt="eza --tree --level=2 --long --icons --git"
@@ -113,5 +114,6 @@ ai-sync() {
   done
 }
 
+alias v="nvim"
 alias nv="nvim"
 alias reload="source ~/.zshrc"
