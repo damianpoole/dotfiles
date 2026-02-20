@@ -56,6 +56,90 @@ wt-clone() {
   git worktree add main
 }
 
+wt-config-apply() {
+  local worktree_name=$1
+  local config_dir=".wt-config"
+  local manifest="$config_dir/manifest.json"
+
+  if [[ -z "$worktree_name" ]]; then
+    echo "Usage: wt-config-apply <worktree-name>"
+    return 1
+  fi
+
+  if [[ ! -d "$worktree_name" ]]; then
+    echo "Error: Worktree '$worktree_name' does not exist in the current directory."
+    return 1
+  fi
+
+  if [[ ! -f "$manifest" ]]; then
+    # Fail silently if there's no manifest, as not every project will have one
+    return 0
+  fi
+
+  echo "Applying configurations to '$worktree_name'..."
+
+  # Parse JSON and loop through files
+  jq -c '.files[]' "$manifest" | while read -r i; do
+    local src dest full_src full_dest
+    
+    src=$(echo "$i" | jq -r '.source')
+    dest=$(echo "$i" | jq -r '.destination')
+
+    full_src="$config_dir/$src"
+    full_dest="$worktree_name/$dest"
+
+    if [[ -f "$full_src" ]]; then
+      # Ensure destination directory exists before copying
+      mkdir -p "$(dirname "$full_dest")"
+      cp -f "$full_src" "$full_dest"
+      echo "✔ Copied $src -> $dest"
+    else
+      echo "⚠ Warning: Source file '$full_src' is missing."
+    fi
+  done
+
+  echo "Configuration applied successfully!"
+}
+
+wt-add() {
+  local branch
+  local wt_path
+  local new_branch=false
+
+  if [[ "$1" == "-n" ]]; then
+    new_branch=true
+    shift
+  fi
+
+  branch=$1
+  wt_path=${2:-$branch}
+
+  if [[ -z "$branch" ]]; then
+    echo "Usage: wt-add [-n] <branch> [path]"
+    return 1
+  fi
+
+  git -C .bare fetch --all --prune
+
+  local success=false
+
+  if [[ "$new_branch" == "true" ]]; then
+    git -C .bare worktree add -b "$branch" "../$wt_path" "origin/main" && success=true
+  elif git -C .bare show-ref --verify --quiet "refs/heads/$branch"; then
+    git -C .bare worktree add "../$wt_path" "$branch" && success=true
+  elif git -C .bare show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    git -C .bare worktree add -b "$branch" "../$wt_path" "origin/$branch" && success=true
+  else
+    echo "Error: branch '$branch' not found (local or origin)."
+    return 1
+  fi
+
+  # If the worktree was successfully created, apply configurations
+  if [[ "$success" == "true" ]]; then
+    wt-config-apply "$wt_path"
+  fi
+}
+
 ai-sync() {
   local source_dir=".ai/skills"
 
