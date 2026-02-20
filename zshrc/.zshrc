@@ -198,6 +198,39 @@ ai-sync() {
   done
 }
 
+nic() {
+    # Ensure this is being run from inside a tmux session
+    if [[ -z "$TMUX" ]]; then
+        echo "Error: You must be inside a tmux session to run this."
+        return 1
+    fi
+
+    # (Optional) Rename the current tmux window to the name of the directory
+    local dir_name=$(basename "$PWD")
+    tmux rename-window "$dir_name"
+
+    # Step 1: Split vertically to create the bottom pane (33% height)
+    tmux split-window -v -l 33% -c "$PWD"
+
+    # Step 2: Select the top pane again (pane 0)
+    tmux select-pane -t 0
+
+    # Step 3: Split horizontally for the top-right pane (33% width)
+    # This leaves the top-left pane with the remaining 67% (2/3rds)
+    tmux split-window -h -l 33% -c "$PWD"
+
+    # Step 4: Launch your applications using send-keys
+    # Pane 0 is Top-Left
+    tmux send-keys -t 0 "nvim ." C-m
+
+    # Pane 1 is Top-Right
+    tmux send-keys -t 1 "oc ." C-m
+
+    # Pane 2 is Bottom. Let's clear the screen and leave your cursor there.
+    tmux send-keys -t 2 "clear" C-m
+    tmux select-pane -t 2
+}
+
 alias v="nvim"
 alias nv="nvim"
 alias reload="source ~/.zshrc"
