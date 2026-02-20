@@ -59,7 +59,7 @@ wt-clone() {
 wt-config-apply() {
   local worktree_name=$1
   local config_dir=".wt-config"
-  local manifest="$config_dir/manifest.json"
+  local config="$config_dir/config.json"
 
   if [[ -z "$worktree_name" ]]; then
     echo "Usage: wt-config-apply <worktree-name>"
@@ -71,15 +71,15 @@ wt-config-apply() {
     return 1
   fi
 
-  if [[ ! -f "$manifest" ]]; then
-    # Fail silently if there's no manifest, as not every project will have one
+  if [[ ! -f "$config" ]]; then
+    # Fail silently if there's no config, as not every project will have one
     return 0
   fi
 
   echo "Applying configurations to '$worktree_name'..."
 
   # Parse JSON and loop through files
-  jq -c '.files[]' "$manifest" | while read -r i; do
+  jq -c '.files[]' "$config" | while read -r i; do
     local src dest full_src full_dest
     
     src=$(echo "$i" | jq -r '.source')
