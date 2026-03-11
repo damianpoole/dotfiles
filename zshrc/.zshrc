@@ -7,7 +7,13 @@ export ZSH="$HOME/.oh-my-zsh"
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="robbyrussell"
 
-eval "$(zoxide init zsh)"
+if command -v brew >/dev/null 2>&1; then
+  eval "$(brew shellenv)"
+fi
+
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi
 
 # Which plugins would you like to load?
 # Standard plugins can be found in $ZSH/plugins/
@@ -17,8 +23,6 @@ eval "$(zoxide init zsh)"
 plugins=(git gpg-agent keychain zoxide)
 
 source $ZSH/oh-my-zsh.sh
-
-eval $(/opt/homebrew/bin/brew shellenv)
 
 # User configuration
 export PATH="$HOME/.local/bin:$PATH"
@@ -33,38 +37,82 @@ alias cl="clear"
 # Source secrets if they exist
 if [ -f "$HOME/.config/.zshrc_secrets" ]; then
     source "$HOME/.config/.zshrc_secrets"
-elif [ -f "${0:a:h}/.zshrc_secrets" ]; then
-    source "${0:a:h}/.zshrc_secrets"
+elif [ -f "${${(%):-%N}:A:h}/.zshrc_secrets" ]; then
+    source "${${(%):-%N}:A:h}/.zshrc_secrets"
 fi
+
+require-command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    print -u2 -- "Error: '$1' is required but not installed."
+    return 1
+  fi
+}
+
+wt-default-branch() {
+  local git_dir=${1:-.bare}
+  local head_ref
+
+  git -C "$git_dir" remote set-head origin -a >/dev/null 2>&1 || true
+  head_ref=$(git -C "$git_dir" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null) || return 1
+  print -r -- "${head_ref#origin/}"
+}
 
 wt-clone() {
   local url=$1
-  local name=$2
-  
-  # 1. Create directory and clone bare
-  mkdir -p "$name" && cd "$name"
-  git clone --bare "$url" .bare
-  
-  # 2. Setup the .git file pointer
-  echo "gitdir: ./.bare" > .git
-  
-  # 3. Fix the fetch refspec so worktrees see remote branches
-  git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  
-  # 4. Fetch and add the main branch as the first worktree
-  git fetch origin
-  git worktree add main
+  local name=${2:-${url:t}}
+  local default_branch
+
+  if [[ -z "$url" ]]; then
+    echo "Usage: wt-clone <repo-url> [directory]"
+    return 1
+  fi
+
+  name=${name%.git}
+
+  if [[ -z "$name" ]]; then
+    echo "Error: Could not determine target directory name."
+    return 1
+  fi
+
+  if [[ -e "$name" ]]; then
+    echo "Error: '$name' already exists."
+    return 1
+  fi
+
+  mkdir -p "$name" || return 1
+  builtin cd -- "$name" || return 1
+
+  git clone --bare "$url" .bare || return 1
+
+  print -r -- "gitdir: ./.bare" > .git || return 1
+
+  git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" || return 1
+  git fetch origin || return 1
+
+  default_branch=$(wt-default-branch .bare) || {
+    echo "Error: Could not determine origin default branch."
+    return 1
+  }
+
+  git worktree add "$default_branch" "origin/$default_branch"
 }
 
 wt-config-apply() {
   local worktree_name=$1
   local config_dir=".wt-config"
   local config="$config_dir/config.json"
+  local i
+  local src
+  local dest
+  local full_src
+  local full_dest
 
   if [[ -z "$worktree_name" ]]; then
     echo "Usage: wt-config-apply <worktree-name>"
     return 1
   fi
+
+  require-command jq || return 1
 
   if [[ ! -d "$worktree_name" ]]; then
     echo "Error: Worktree '$worktree_name' does not exist in the current directory."
@@ -78,12 +126,14 @@ wt-config-apply() {
 
   echo "Applying configurations to '$worktree_name'..."
 
-  # Parse JSON and loop through files
-  jq -c '.files[]' "$config" | while read -r i; do
-    local src dest full_src full_dest
-    
-    src=$(echo "$i" | jq -r '.source')
-    dest=$(echo "$i" | jq -r '.destination')
+  if ! jq -e '.files | arrays' "$config" >/dev/null 2>&1; then
+    echo "Error: Invalid config file '$config'. Expected a 'files' array."
+    return 1
+  fi
+
+  while IFS= read -r i; do
+    src=$(jq -r '.source' <<< "$i")
+    dest=$(jq -r '.destination' <<< "$i")
 
     full_src="$config_dir/$src"
     full_dest="$worktree_name/$dest"
@@ -96,7 +146,7 @@ wt-config-apply() {
     else
       echo "⚠ Warning: Source file '$full_src' is missing."
     fi
-  done
+  done < <(jq -c '.files[]' "$config")
 
   echo "Configuration applied successfully!"
 }
@@ -104,27 +154,69 @@ wt-config-apply() {
 wt-add() {
   local branch
   local wt_path
+  local base_ref
   local new_branch=false
 
-  if [[ "$1" == "-n" ]]; then
-    new_branch=true
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -n)
+        new_branch=true
+        ;;
+      -b|--base)
+        shift
+        if [[ -z "$1" ]]; then
+          echo "Usage: wt-add [-n] [-b <base-ref>] <branch> [path]"
+          return 1
+        fi
+        base_ref=$1
+        ;;
+      -h|--help)
+        echo "Usage: wt-add [-n] [-b <base-ref>] <branch> [path]"
+        return 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        echo "Error: Unknown option '$1'"
+        echo "Usage: wt-add [-n] [-b <base-ref>] <branch> [path]"
+        return 1
+        ;;
+      *)
+        break
+        ;;
+    esac
     shift
-  fi
+  done
 
   branch=$1
   wt_path=${2:-$branch}
 
   if [[ -z "$branch" ]]; then
-    echo "Usage: wt-add [-n] <branch> [path]"
+    echo "Usage: wt-add [-n] [-b <base-ref>] <branch> [path]"
     return 1
   fi
 
-  git -C .bare fetch --all --prune
+  if [[ ! -d .bare ]]; then
+    echo "Error: .bare repository not found in the current directory."
+    return 1
+  fi
+
+  git -C .bare fetch --all --prune || return 1
 
   local success=false
 
   if [[ "$new_branch" == "true" ]]; then
-    git -C .bare worktree add -b "$branch" "../$wt_path" "origin/main" && success=true
+    if [[ -z "$base_ref" ]]; then
+      base_ref=$(wt-default-branch .bare) || {
+        echo "Error: Could not determine the origin default branch. Use -b to set one explicitly."
+        return 1
+      }
+      base_ref="origin/$base_ref"
+    fi
+
+    git -C .bare worktree add -b "$branch" "../$wt_path" "$base_ref" && success=true
   elif git -C .bare show-ref --verify --quiet "refs/heads/$branch"; then
     git -C .bare worktree add "../$wt_path" "$branch" && success=true
   elif git -C .bare show-ref --verify --quiet "refs/remotes/origin/$branch"; then
@@ -142,16 +234,19 @@ wt-add() {
 
 ai-sync() {
   local source_dir=".ai/skills"
-
+  local -a worktrees
+  local -a skill_roots
+  local -a skill_dirs
+  local wt_path
+  
   if [[ ! -d "$source_dir" ]]; then
     echo "Error: .ai/skills directory not found in current folder."
     return 1
   fi
 
-  local worktrees=()
   local wt
-  for wt in */; do
-    wt="${wt%/}"
+  for wt_path in ./*(/N); do
+    wt="${wt_path#./}"
     if [[ "$wt" == ".bare" ]]; then
       continue
     fi
@@ -165,35 +260,30 @@ ai-sync() {
     return 1
   fi
 
+  skill_dirs=("$source_dir"/*(/N))
+  if [[ ${#skill_dirs[@]} -eq 0 ]]; then
+    echo "Error: No skills found in '$source_dir'."
+    return 1
+  fi
+
   local skill_dir
   local skill_name
-  local skill_file
+  skill_roots=(".github/skills" ".gemini/skills" ".opencode/skill")
   local dest
+  local skill_root
 
   for wt in "${worktrees[@]}"; do
     echo "Syncing skills for worktree: $wt"
 
-    for skill_dir in "$source_dir"/*; do
-      [[ -d "$skill_dir" ]] || continue
+    for skill_dir in "${skill_dirs[@]}"; do
       skill_name="${skill_dir##*/}"
-      skill_file="$skill_dir/SKILL.md"
 
-      if [[ ! -f "$skill_file" ]]; then
-        echo "Skipping $skill_name (no SKILL.md)"
-        continue
-      fi
-
-      dest="$wt/.github/skills/$skill_name"
-      mkdir -p "$dest"
-      cp -f "$skill_file" "$dest/SKILL.md"
-
-      dest="$wt/.gemini/skills/$skill_name"
-      mkdir -p "$dest"
-      cp -f "$skill_file" "$dest/SKILL.md"
-
-      dest="$wt/.opencode/skill/$skill_name"
-      mkdir -p "$dest"
-      cp -f "$skill_file" "$dest/SKILL.md"
+      for skill_root in "${skill_roots[@]}"; do
+        dest="$wt/$skill_root/$skill_name"
+        rm -rf -- "$dest"
+        mkdir -p "$dest" || return 1
+        cp -Rf "$skill_dir/." "$dest/" || return 1
+      done
     done
   done
 }
@@ -230,7 +320,7 @@ nic() {
     tmux send-keys -t 2 "clear" C-m
     tmux select-pane -t 2
 }
-
+alias oc="opencode ."
 alias v="nvim"
 alias nv="nvim"
 alias reload="source ~/.zshrc"
