@@ -1,0 +1,16 @@
+onboarding = false
+
+[keys]
+prefix = "ctrl+a"
+
+[[keys.command]]
+key = "prefix+s"
+type = "plugin_action"
+command = "opencode.session-search.search"
+description = "search OpenCode sessions"
+
+[[keys.command]]
+key = "prefix+g"
+type = "plugin_action"
+command = "tareqmlx.lazygit-viewer.status-overlay"
+description = "open lazygit in a popup"

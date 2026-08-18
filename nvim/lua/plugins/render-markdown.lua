@@ -9,6 +9,11 @@ return {
           question = { highlight = "DiagnosticInfo", raw = "[?]", rendered = " " },
         },
       },
+      heading = {
+        icons = { "󰎤 ", "󰎧 ", "󰎪 ", "󰎭 ", "󰎱 ", "󰎳 " },
+        sign = { false },
+        border = { true },
+      },
       -- heading = { above = " ", below = " ", border = true, icons = { " " }, sign = false },
     })
   end,
