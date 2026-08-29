@@ -51,7 +51,100 @@ return {
       desc = "Grep Notes",
     },
     { "<leader>on", "<cmd>ObsidianNew<cr>", desc = "Create New Note" },
-    { "<leader>ot", "<cmd>ObsidianToday<cr>", desc = "Daily Note" },
+    {
+      "<leader>ot",
+      function()
+        local vault_path = vim.fn.expand("~/vaults/second-brain")
+        local daily_folder = "dailies"
+        local today = os.date("%Y-%m-%d")
+        local filepath = string.format("%s/%s/%s.md", vault_path, daily_folder, today)
+
+        local function ensure_parent(path)
+          vim.fn.mkdir(vim.fn.fnamemodify(path, ":h"), "p")
+        end
+
+        local function file_exists(path)
+          local f = io.open(path, "r")
+          if f then
+            f:close()
+            return true
+          end
+          return false
+        end
+
+        local function write_file(path, content)
+          local f = io.open(path, "w")
+          if not f then
+            return false
+          end
+          f:write(content)
+          f:close()
+          return true
+        end
+
+        local function ensure_work_log_section(path)
+          local f = io.open(path, "r")
+          if not f then
+            return
+          end
+          local content = f:read("*a")
+          f:close()
+
+          if content:match("^## Work Log%s*") or content:match("\n## Work Log%s*") then
+            return
+          end
+
+          if content ~= "" and not content:match("\n$") then
+            content = content .. "\n"
+          end
+          content = content .. "\n## Work Log\n- \n"
+          write_file(path, content)
+        end
+
+        ensure_parent(filepath)
+
+        if not file_exists(filepath) then
+          local content = table.concat({
+            "---",
+            "id: " .. today,
+            "aliases: []",
+            "tags:",
+            "  - daily-notes",
+            "---",
+            "",
+            "# " .. today,
+            "",
+            "## Focus",
+            "- [ ]",
+            "",
+            "## Notes",
+            "- ",
+            "",
+            "## Work Log",
+            "- ",
+            "",
+            "## Mini Retro",
+            "- Win: ",
+            "- Friction: ",
+            "- Tomorrow: ",
+            "",
+          }, "\n")
+
+          if not write_file(filepath, content) then
+            print("Error: Could not write daily note at " .. filepath)
+            return
+          end
+        end
+
+        ensure_work_log_section(filepath)
+        vim.cmd("edit " .. filepath)
+        if vim.fn.search("- \\[ \\]", "w") > 0 then
+          vim.cmd("norm! A")
+          vim.cmd("startinsert")
+        end
+      end,
+      desc = "Daily Note",
+    },
     {
       "<leader>oN",
       function()
