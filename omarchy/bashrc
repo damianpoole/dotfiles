@@ -1,0 +1,9 @@
+# Sourced from ~/.bashrc by install-omarchy.sh. Keep Omarchy's bootstrap above this.
+alias reload='source ~/.bashrc'
+
+alias l="eza -l --icons --git -a"
+alias lt="eza --tree --level=2 --long --icons --git"
+alias ltree="eza --tree --level=2  --icons --git"
+
+alias cl="clear"
+alias gst="git status"

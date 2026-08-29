@@ -1,4 +1,4 @@
---target=~/.config
+# Prefer ./install-macos.sh or ./install-omarchy.sh — they set -d and -t explicitly.
 --ignore=.stowrc
 --ignore=DS_Store
 --ignore=atuin/*

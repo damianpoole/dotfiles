@@ -1,6 +1,5 @@
-# a toml linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
-# if you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
-"$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+# a toml linter such as https://github.com/tombi-toml/tombi can use this schema to validate your config.
+#:schema https://yazi-rs.github.io/schemas/keymap.json
 
 [mgr]
 

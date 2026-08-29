@@ -1,0 +1,4 @@
+-- Autocmds are automatically loaded on the VeryLazy event
+-- Default autocmds that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/autocmds.lua
+--
+-- Shared autocmds live in lua/plugins/user-autocmds.lua so they stow onto Omarchy.
