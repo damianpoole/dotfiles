@@ -3,6 +3,10 @@ vim.g.snacks_animate = false
 vim.g.lazyvim_picker = "fzf" -- Use fzf-lua as the default picker
 vim.opt.tabstop = 4
 
+-- Override Omarchy's line-number defaults for editing windows.
+vim.opt.number = true
+vim.opt.relativenumber = true
+
 -- Indentation settings for 4 spaces
 vim.opt.shiftwidth = 4 -- Number of spaces for each indentation level
 vim.opt.softtabstop = 4 -- Number of spaces that a <Tab> counts for when editing
